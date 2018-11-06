@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class Utils {
 
@@ -38,21 +40,40 @@ class Utils {
         return currentTime.format(cal.getTime());
     }
 
-    private static void get(String url) throws IOException {
-        URL obj = new URL(url);
-        HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
+    public static void get(String url) {
+        BufferedReader in = null;
+        InputStreamReader isr = null;
+        try {
+            URL obj = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
 
-        connection.setRequestMethod("GET");
+            connection.setRequestMethod("GET");
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
+            isr = new InputStreamReader(connection.getInputStream());
+            in = new BufferedReader(isr);
+            String inputLine;
+            StringBuilder response = new StringBuilder();
 
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            System.out.println(response.toString());
+        } catch (IOException e) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, e);
+        } finally {
+            close(in);
+            close(isr);
         }
-        in.close();
 
-        System.out.println(response.toString());
+    }
+
+    private static void close(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

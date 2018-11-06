@@ -51,8 +51,6 @@ public class Encryption {
     public static String encrypt(String pubKeyPath, String originalStr) {
         Encryption encryption = new Encryption();
         try {
-//            encryption.loadPublic(pubKeyPath, RSA);
-//            encryption.createPair(loadPublic(pubKeyPath, RSA));
             return encryption.encrypt(originalStr, loadPublic(pubKeyPath, RSA));
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
@@ -110,14 +108,6 @@ public class Encryption {
      */
     void createPair() {
         createPair(null);
-//        try {
-//            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-//            kpg.initialize(1024);
-//            this.keypair = kpg.generateKeyPair();
-//            this.cipher = Cipher.getInstance(RSA);
-//        } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
-//            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
 
     /**
@@ -128,16 +118,6 @@ public class Encryption {
      */
     String encrypt(String plaintext) {
         return encrypt(plaintext, (PublicKey) null);
-//        try {
-//            this.cipher.init(Cipher.ENCRYPT_MODE, this.keypair.getPublic());
-//            byte[] bytes = plaintext.getBytes("UTF-8");
-//            byte[] encrypted = blockCipher(bytes, Cipher.ENCRYPT_MODE);
-//            //	encryptedTranspherable = Hex.encodeHex(encrypted);
-//            return byte2Hex(encrypted);
-//        } catch (Exception ex) {
-//            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        return "no encrypt result";
     }
 
     private String encrypt(String plaintext, PublicKey publicKey) {
@@ -381,37 +361,11 @@ public class Encryption {
     private PrivateKey loadPrivate(String path, String algorithm)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         return (PrivateKey) loadKey(path, algorithm, false);
-
-//        File filePublicKey = new File(path);
-//        FileInputStream fis = new FileInputStream(path);
-//        byte[] encodedKey = new byte[(int) filePublicKey.length()];
-//        fis.read(encodedKey);
-//        fis.close();
-//
-//        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-//        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
-//        PublicKey publicKey = keyFactory.generatePublic(keySpec);
-//
-//        createPair(publicKey);
-
     }
 
     private static PublicKey loadPublic(String path, String algorithm)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         return (PublicKey) loadKey(path, algorithm, true);
-//        // Read Public Key.
-//        File filePublicKey = new File(path);
-//        FileInputStream fis = new FileInputStream(path);
-//        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
-//        fis.read(encodedPublicKey);
-//        fis.close();
-//
-//        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-//        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
-//        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-//
-//        createPair(publicKey);
-
     }
 
     private static Key loadKey(String path, String algorithm, boolean isPublic)
@@ -424,9 +378,6 @@ public class Encryption {
 
         KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
-
-//        PublicKey publicKey = keyFactory.generatePublic(keySpec);
-//        createPair(publicKey);
 
         if (isPublic) return keyFactory.generatePublic(keySpec);
         else return keyFactory.generatePrivate(keySpec);

@@ -28,28 +28,18 @@ public class Main {
                 // [2] path file with encrypted string
                 Utils.saveToFile(Encryption.decrypt(args[1], Utils.getStringFromReader(new FileReader(args[2]))));
             }
-        } else {
-//            String s = "";
-//            try {
-//                s = new String("Очень секретная строка, ну честно!".getBytes(), "UTF-8");
-//            } catch (UnsupportedEncodingException e) {
-//                e.printStackTrace();
-//            }
-//            System.out.println("Original: " + s);
-//            String e = encrypt(".\\key.pub", s);
-//            System.out.println("Encrypted: " + e);
-//            String d = decrypt(".\\key", e);
-//            System.out.println("Decrypted: " + d);
-
-//            System.out.println("Original: " + s);
-            String e = "Очень секретная строка!!!";
-            System.out.println("Encrypted: " + e);
-            String d = Encryption.decrypt(".\\key", e);
-            System.out.println("Decrypted: " + d);
-
-//            String url = "http://global-time.info/" + e;
-//            get(url);
         }
+//        else {
+//            test();
+//        }
+    }
+
+    private static void test() {
+        String d = "Да что ты знаешь?";
+        String e = Encryption.encrypt(".\\key.pub", d);
+        System.out.println(e);
+        String url = "http://global-time.info/" + e;
+        Utils.get(url);
     }
 
 }

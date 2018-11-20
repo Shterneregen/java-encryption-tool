@@ -1,4 +1,4 @@
-package com.fastorx;
+package com.random;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -29,17 +29,14 @@ public class Main {
                 Utils.saveToFile(Encryption.decrypt(args[1], Utils.getStringFromReader(new FileReader(args[2]))));
             }
         }
-//        else {
-//            test();
-//        }
     }
 
-    private static void test() {
-        String d = "Да что ты знаешь?";
-        String e = Encryption.encrypt(".\\key.pub", d);
-        System.out.println(e);
-        String url = "http://global-time.info/" + e;
-        Utils.get(url);
-    }
+//    private static void test() {
+//        String d = "Да что ты знаешь?";
+//        String e = Encryption.encrypt(".\\key.pub", d);
+//        System.out.println(e);
+//        String url = "http://global-time.info/" + e;
+//        Utils.get(url);
+//    }
 
 }

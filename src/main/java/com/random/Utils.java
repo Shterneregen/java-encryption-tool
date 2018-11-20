@@ -1,4 +1,4 @@
-package com.fastorx;
+package com.random;
 
 import java.io.*;
 import java.net.HttpURLConnection;

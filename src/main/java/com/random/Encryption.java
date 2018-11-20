@@ -1,4 +1,4 @@
-package com.fastorx;
+package com.random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;

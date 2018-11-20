@@ -3,13 +3,13 @@ plugins {
     id "application"
 }
 
-mainClassName = 'com.fastorx.Main'
+mainClassName = 'com.random.Main'
 
 jar {
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-                'Main-Class': 'com.fastorx.Main'
+                'Main-Class': 'com.random.Main'
         )
     }
 }

@@ -24,19 +24,11 @@ public class Main {
             } else if (args[0].equals("-d") && args.length > 2) {
                 System.out.println(Encryption.decrypt(args[1], args[2]));
             } else if (args[0].equals("-df") && args.length > 2) {
-                // [1] path to public key
+                // [1] path to private key
                 // [2] path file with encrypted string
                 Utils.saveToFile(Encryption.decrypt(args[1], Utils.getStringFromReader(new FileReader(args[2]))));
             }
         }
     }
-
-//    private static void test() {
-//        String d = "Да что ты знаешь?";
-//        String e = Encryption.encrypt(".\\key.pub", d);
-//        System.out.println(e);
-//        String url = "http://global-time.info/" + e;
-//        Utils.get(url);
-//    }
 
 }

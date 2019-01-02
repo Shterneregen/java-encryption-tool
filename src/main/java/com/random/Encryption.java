@@ -4,14 +4,15 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.*;
+import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,26 +27,6 @@ public class Encryption {
     private Cipher cipher;
 
     Encryption() {
-    }
-
-    Encryption(KeyPair keypair) {
-        this.keypair = keypair;
-        try {
-            this.cipher = Cipher.getInstance(RSA);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, e);
-        }
-    }
-
-    public static void generateAndSaveKeyPair(String path) {
-        Encryption encryption = new Encryption();
-        encryption.createPair();
-        KeyPair kp = encryption.getKeypair();
-        try {
-            encryption.saveKeyPair(path, kp);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     //<editor-fold desc="get-set">
@@ -91,9 +72,8 @@ public class Encryption {
 
     //<editor-fold desc="encrypt">
     public static String encrypt(String pubKeyPath, String originalStr) {
-        Encryption encryption = new Encryption();
         try {
-            return encryption.encrypt(originalStr, loadPublic(pubKeyPath, RSA));
+            return encrypt(originalStr, loadPublic(pubKeyPath));
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
@@ -110,17 +90,12 @@ public class Encryption {
         return encrypt(plaintext, (PublicKey) null);
     }
 
-    private String encrypt(String plaintext, PublicKey publicKey) {
+    private static String encrypt(String plaintext, PublicKey publicKey) {
         try {
-            if (publicKey == null) {
-                this.cipher.init(Cipher.ENCRYPT_MODE, this.keypair.getPublic());
-            } else {
-                this.cipher = Cipher.getInstance(RSA);
-                this.cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            }
+            Cipher cipher = Cipher.getInstance(RSA);
+            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             byte[] bytes = plaintext.getBytes("UTF-8");
-            byte[] encrypted = blockCipher(bytes, Cipher.ENCRYPT_MODE);
-            //	encryptedTranspherable = Hex.encodeHex(encrypted);
+            byte[] encrypted = blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
             return byte2Hex(encrypted);
         } catch (Exception ex) {
             Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
@@ -131,32 +106,13 @@ public class Encryption {
 
     //<editor-fold desc="decrypt">
 
-    /**
-     * Расшифровывает строку закрытым ключом
-     *
-     * @param encryptedStr зашифрованая строка
-     * @return расшифрованная строка
-     */
-    String decrypt(String encryptedStr) {
-        try {
-            this.cipher.init(Cipher.DECRYPT_MODE, this.keypair.getPrivate());
-            byte[] bts = hex2Byte(encryptedStr);
-            byte[] decrypted = blockCipher(bts, Cipher.DECRYPT_MODE);
-            String resStr = new String(decrypted, "UTF-8");
-            return removeTheTrash(resStr);
-        } catch (Exception ex) {
-            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return "no decrypt result";
-    }
-
     static String decrypt(String privateKeyPath, String encryptedStr) {
-        Encryption encryption = new Encryption();
         try {
-            PrivateKey privateKey = encryption.loadPrivate(privateKeyPath, RSA);
-            encryption.cipher.init(Cipher.DECRYPT_MODE, privateKey);
+            PrivateKey privateKey = loadPrivate(privateKeyPath);
+            Cipher cipher = Cipher.getInstance(RSA);
+            cipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] bts = hex2Byte(encryptedStr);
-            byte[] decrypted = encryption.blockCipher(bts, Cipher.DECRYPT_MODE);
+            byte[] decrypted = blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
             String resStr = new String(decrypted, "UTF-8");
             return removeTheTrash(resStr);
         } catch (Exception ex) {
@@ -164,21 +120,10 @@ public class Encryption {
         }
         return "no decrypt result";
     }
-
-//    public static String decrypt(String keyPairPath, String encryptedStr) {
-//        try {
-//            KeyPair serverKeyPair = Encryption.loadKeyPair(keyPairPath, RSA);
-//            Encryption encryption = new Encryption(serverKeyPair);
-//            return encryption.decrypt(encryptedStr);
-//        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-//            e.printStackTrace();
-//        }
-//        return "no decrypt result";
-//    }
     //</editor-fold>
 
     //<editor-fold desc="Encryption logic">
-    private byte[] blockCipher(byte[] bytes, int mode) throws IllegalBlockSizeException, BadPaddingException {
+    public static byte[] blockCipher(byte[] bytes, int mode, Cipher cipher) throws IllegalBlockSizeException, BadPaddingException {
         // string initialize 2 buffers.
         // scrambled will hold intermediate results
         byte[] scrambled = new byte[0];
@@ -223,7 +168,7 @@ public class Encryption {
         return toReturn;
     }
 
-    private byte[] append(byte[] prefix, byte[] suffix) {
+    private static byte[] append(byte[] prefix, byte[] suffix) {
         byte[] toReturn = new byte[prefix.length + suffix.length];
         for (int i = 0; i < prefix.length; i++) {
             toReturn[i] = prefix[i];
@@ -234,7 +179,7 @@ public class Encryption {
         return toReturn;
     }
 
-    private static String byte2Hex(byte b[]) {
+    public static String byte2Hex(byte b[]) {
         StringBuilder hs = new StringBuilder();
         String stmp = "";
         for (byte aB : b) {
@@ -272,7 +217,7 @@ public class Encryption {
         return (byte) (k & 0xff);
     }
 
-    private static byte[] hex2Byte(String str) {
+    public static byte[] hex2Byte(String str) {
         int len = str.length();
 //        System.out.println("len:" + len);
         if (len % 2 != 0) {
@@ -290,7 +235,7 @@ public class Encryption {
     /**
      * Удаляет управляющие символы из строки.
      */
-    private static String removeTheTrash(String s) {
+    public static String removeTheTrash(String s) {
         char[] buf = new char[1024];
         int length = s.length();
         char[] oldChars = (length < 1024) ? buf : new char[length];
@@ -333,6 +278,7 @@ public class Encryption {
         return result.toString();
     }
 
+    @Deprecated
     private void saveKeyPair(String path, KeyPair keyPair) throws IOException {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
@@ -349,75 +295,74 @@ public class Encryption {
         fos.write(pkcs8EncodedKeySpec.getEncoded());
         fos.close();
     }
-    private void saveKeyPairBase64(String path, KeyPair keyPair) throws IOException {
-        PrivateKey privateKey = keyPair.getPrivate();
-        PublicKey publicKey = keyPair.getPublic();
 
-        // Store Public Key.
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(path + "key." + EXT_PUBLIC);
+    public static void saveKeyPairBase64(String path) {
+        try {
+            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
+            kpg.initialize(1024);
+            KeyPair keyPair = kpg.generateKeyPair();
+
+            PrivateKey privateKey = keyPair.getPrivate();
+            PublicKey publicKey = keyPair.getPublic();
+
+            // Store Public Key.
+            FileOutputStream fos = new FileOutputStream(path + "key." + EXT_PUBLIC);
 //        fos.write("-----BEGIN RSA PUBLIC KEY-----\n");
-        fos.write(x509EncodedKeySpec.getEncoded());
+            fos.write(Base64.getEncoder().encodeToString(publicKey.getEncoded()).getBytes("UTF-8"));
 //        fos.write("\n-----END RSA PUBLIC KEY-----\n");
-        fos.close();
+            fos.close();
 
-        // Store Private Key.
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        fos = new FileOutputStream(path + "key." + EXT_PRIVATE);
-        fos.write(pkcs8EncodedKeySpec.getEncoded());
-        fos.close();
+            // Store Private Key.
+            fos = new FileOutputStream(path + "key." + EXT_PRIVATE);
+            fos.write(Base64.getEncoder().encodeToString(privateKey.getEncoded()).getBytes("UTF-8"));
+            fos.close();
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private static KeyPair loadKeyPair(String path, String algorithm)
+//    private static KeyPair loadKeyPair(String path, String algorithm)
+//            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+//        // Read Public Key.
+//        File filePublicKey = new File(path + "." + EXT_PUBLIC);
+//        FileInputStream fis = new FileInputStream(path + "." + EXT_PUBLIC);
+//        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
+//        fis.read(encodedPublicKey);
+//        fis.close();
+//
+//        // Read Private Key.
+//        File filePrivateKey = new File(path + "." + EXT_PRIVATE);
+//        fis = new FileInputStream(path + "." + EXT_PRIVATE);
+//        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
+//        fis.read(encodedPrivateKey);
+//        fis.close();
+//
+//        // Generate KeyPair.
+//        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
+//        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
+//        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+//
+//        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
+//        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+//
+//        return new KeyPair(publicKey, privateKey);
+//    }
+
+    private static PrivateKey loadPrivate(String path)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        // Read Public Key.
-        File filePublicKey = new File(path + "." + EXT_PUBLIC);
-        FileInputStream fis = new FileInputStream(path + "." + EXT_PUBLIC);
-        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
-        fis.read(encodedPublicKey);
-        fis.close();
-
-        // Read Private Key.
-        File filePrivateKey = new File(path + "." + EXT_PRIVATE);
-        fis = new FileInputStream(path + "." + EXT_PRIVATE);
-        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
-        fis.read(encodedPrivateKey);
-        fis.close();
-
-        // Generate KeyPair.
-        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
-        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-
-        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
-
-        return new KeyPair(publicKey, privateKey);
+        byte[] keyBytes = Files.readAllBytes(Paths.get(path));
+        byte[] privateKeyBytes = Base64.getDecoder().decode(keyBytes);
+        EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory kf = KeyFactory.getInstance(RSA);
+        return kf.generatePrivate(spec);
     }
 
-    private PrivateKey loadPrivate(String path, String algorithm)
+    private static PublicKey loadPublic(String path)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        return (PrivateKey) loadKey(path, algorithm, false);
-    }
-
-    private static PublicKey loadPublic(String path, String algorithm)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        return (PublicKey) loadKey(path, algorithm, true);
-    }
-
-    private static Key loadKey(String path, String algorithm, boolean isPublic)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        File filePublicKey = new File(path);
-        FileInputStream fis = new FileInputStream(path);
-        byte[] encodedKey = new byte[(int) filePublicKey.length()];
-        fis.read(encodedKey);
-        fis.close();
-
-        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
-
-        if (isPublic) return keyFactory.generatePublic(keySpec);
-        else return keyFactory.generatePrivate(keySpec);
+        byte[] keyBytes = Files.readAllBytes(Paths.get(path));
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.getDecoder().decode(keyBytes));
+        KeyFactory kf = KeyFactory.getInstance(RSA);
+        return kf.generatePublic(spec);
     }
     //</editor-fold>
 }

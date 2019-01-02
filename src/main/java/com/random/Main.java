@@ -18,15 +18,19 @@ public class Main {
 
         if (args.length > 0) {
             if (args[0].equals("-g")) {
-                Encryption.generateAndSaveKeyPair(args.length > 1 ? args[1] : ".\\");
+                Encryption.saveKeyPairBase64(args.length > 1 ? args[1] : ".\\");
             } else if (args[0].equals("-e") && args.length > 2) {
-                System.out.println(Encryption.encrypt(args[1], args[2]));
+                String pubKeyPath = args[1];
+                String originalStr = args[2];
+                System.out.println(Encryption.encrypt(pubKeyPath, originalStr));
             } else if (args[0].equals("-d") && args.length > 2) {
-                System.out.println(Encryption.decrypt(args[1], args[2]));
+                String privateKeyPath = args[1];
+                String encryptedStr = args[2];
+                System.out.println(Encryption.decrypt(privateKeyPath, encryptedStr));
             } else if (args[0].equals("-df") && args.length > 2) {
-                // [1] path to private key
-                // [2] path file with encrypted string
-                Utils.saveToFile(Encryption.decrypt(args[1], Utils.getStringFromReader(new FileReader(args[2]))));
+                String privateKeyPath = args[1];
+                String filePath = args[2];
+                Utils.saveToFile(Encryption.decrypt(privateKeyPath, Utils.getStringFromReader(new FileReader(filePath))));
             }
         }
     }

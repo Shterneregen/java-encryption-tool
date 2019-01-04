@@ -1,20 +1,15 @@
+import com.random.Encryption;
 import org.junit.Test;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.*;
 import java.security.spec.EncodedKeySpec;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-
-import com.random.*;
-import sun.misc.BASE64Decoder;
 
 public class EncryptionTest {
 
@@ -75,8 +70,7 @@ public class EncryptionTest {
     }
 
     @Test
-    public void test() {
-
+    public void testPrivateKeyLoad() {
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
             kpg.initialize(1024);
@@ -96,7 +90,6 @@ public class EncryptionTest {
             byte[] keyBytes = Base64.getEncoder().withoutPadding().encode(privateKey.getEncoded());
 
             byte[] privateKeyBytes = Base64.getDecoder().decode(keyBytes);
-//            byte[] privateKeyBytes = privateKey.getEncoded();
             EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
             KeyFactory kf = KeyFactory.getInstance(RSA);
             PrivateKey privateKeyNew = kf.generatePrivate(spec);
@@ -107,6 +100,8 @@ public class EncryptionTest {
 //            String resStr = new String(decrypted, "UTF-8");
 //            System.out.println(resStr);
             String res = Encryption.removeTheTrash(new String(decrypted, "UTF-8"));
+
+            assert (plaintext.equals(res));
             System.out.println(res);
 
         } catch (Exception e) {

@@ -3,8 +3,8 @@ package com.random;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -23,51 +23,24 @@ public class Encryption {
     private static String EXT_PUBLIC = "pub";
     private static String EXT_PRIVATE = "key";
 
-    private KeyPair keypair;
-    private Cipher cipher;
-
-    Encryption() {
-    }
-
-    //<editor-fold desc="get-set">
-    KeyPair getKeypair() {
-        return keypair;
-    }
-
-    /**
-     * Возвращает открытый ключ из существующей пары открытый/закрытый ключ
-     *
-     * @return открытый ключ
-     */
-    public PublicKey getPublic() {
-        return keypair.getPublic();
-    }
-    //</editor-fold>
-
     /**
      * Формирует пару открытый/закрытый ключ по заданному открытому ключу
      *
      * @param publicKey открытый ключ
      */
-    private void createPair(PublicKey publicKey) {
+    private KeyPair createPair(PublicKey publicKey) {
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
             kpg.initialize(1024);
             KeyPair tempKeypair = kpg.generateKeyPair();
-            this.keypair = publicKey == null
+            KeyPair keypair = publicKey == null
                     ? kpg.generateKeyPair()
                     : new KeyPair(publicKey, tempKeypair.getPrivate());
-            this.cipher = Cipher.getInstance(RSA);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
+            return keypair;
+        } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
         }
-    }
-
-    /**
-     * Формирует пару открытый/закрытый ключ
-     */
-    void createPair() {
-        createPair(null);
     }
 
     //<editor-fold desc="encrypt">
@@ -78,16 +51,6 @@ public class Encryption {
             e.printStackTrace();
         }
         return "";
-    }
-
-    /**
-     * Шифрует сообщение открытым ключом
-     *
-     * @param plaintext исходная строка
-     * @return зашифрованная строка
-     */
-    String encrypt(String plaintext) {
-        return encrypt(plaintext, (PublicKey) null);
     }
 
     private static String encrypt(String plaintext, PublicKey publicKey) {
@@ -105,7 +68,6 @@ public class Encryption {
     //</editor-fold>
 
     //<editor-fold desc="decrypt">
-
     static String decrypt(String privateKeyPath, String encryptedStr) {
         try {
             PrivateKey privateKey = loadPrivate(privateKeyPath);
@@ -256,7 +218,6 @@ public class Encryption {
     //</editor-fold>
 
     //<editor-fold desc="I/O">
-
     /**
      * Выводит в консоль ключевую пару
      *

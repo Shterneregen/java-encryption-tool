@@ -3,6 +3,14 @@ plugins {
     id "application"
 }
 
+repositories {
+    mavenCentral()
+}
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.1'
+}
+
 mainClassName = 'com.random.Main'
 
 jar {

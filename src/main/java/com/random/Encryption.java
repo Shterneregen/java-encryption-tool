@@ -1,10 +1,9 @@
 package com.random;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -46,14 +45,14 @@ public class Encryption {
     //<editor-fold desc="encrypt">
     public static String encrypt(String pubKeyPath, String originalStr) {
         try {
-            return encrypt(originalStr, loadPublic(pubKeyPath));
+            return encrypt(loadPublic(pubKeyPath), originalStr);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
         return "";
     }
 
-    private static String encrypt(String plaintext, PublicKey publicKey) {
+    private static String encrypt(PublicKey publicKey, String plaintext) {
         try {
             Cipher cipher = Cipher.getInstance(RSA);
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -218,6 +217,7 @@ public class Encryption {
     //</editor-fold>
 
     //<editor-fold desc="I/O">
+
     /**
      * Выводит в консоль ключевую пару
      *
@@ -240,24 +240,24 @@ public class Encryption {
     }
 
     @Deprecated
-    private void saveKeyPair(String path, KeyPair keyPair) throws IOException {
+    private void saveKeyPair(String pathToSave, KeyPair keyPair) throws IOException {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
         // Store Public Key.
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(path + "key." + EXT_PUBLIC);
+        FileOutputStream fos = new FileOutputStream(pathToSave + "key." + EXT_PUBLIC);
         fos.write(x509EncodedKeySpec.getEncoded());
         fos.close();
 
         // Store Private Key.
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        fos = new FileOutputStream(path + "key." + EXT_PRIVATE);
+        fos = new FileOutputStream(pathToSave + "key." + EXT_PRIVATE);
         fos.write(pkcs8EncodedKeySpec.getEncoded());
         fos.close();
     }
 
-    public static void saveKeyPairBase64(String path) {
+    public static void saveKeyPairBase64(String pathToSave, String keyPairName) {
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
             kpg.initialize(1024);
@@ -267,14 +267,14 @@ public class Encryption {
             PublicKey publicKey = keyPair.getPublic();
 
             // Store Public Key.
-            FileOutputStream fos = new FileOutputStream(path + "key." + EXT_PUBLIC);
+            FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC);
 //        fos.write("-----BEGIN RSA PUBLIC KEY-----\n");
             fos.write(Base64.getEncoder().encodeToString(publicKey.getEncoded()).getBytes("UTF-8"));
 //        fos.write("\n-----END RSA PUBLIC KEY-----\n");
             fos.close();
 
             // Store Private Key.
-            fos = new FileOutputStream(path + "key." + EXT_PRIVATE);
+            fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE);
             fos.write(Base64.getEncoder().encodeToString(privateKey.getEncoded()).getBytes("UTF-8"));
             fos.close();
         } catch (NoSuchAlgorithmException | IOException e) {
@@ -326,4 +326,71 @@ public class Encryption {
         return kf.generatePublic(spec);
     }
     //</editor-fold>
+
+    public static void encryptFile(String pubKeyPath, String inputFile) throws Exception {
+        SecureRandom srandom = new SecureRandom();
+        byte[] iv = new byte[128 / 8];
+        srandom.nextBytes(iv);
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+        KeyGenerator kgen = KeyGenerator.getInstance("AES");
+
+        kgen.init(128);
+        SecretKey skey = kgen.generateKey();
+
+        PublicKey publicKey = loadPublic(pubKeyPath);
+
+        FileOutputStream out = new FileOutputStream(inputFile + ".enc");
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        byte[] b = cipher.doFinal(skey.getEncoded());
+        out.write(b);
+        out.write(iv);
+
+        Cipher ci = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        ci.init(Cipher.ENCRYPT_MODE, skey, ivspec);
+        try (FileInputStream in = new FileInputStream(inputFile)) {
+            processFile(ci, in, out);
+        }
+        out.close();
+    }
+
+    public static void decrypFile(String privateKeyPath, String inputFile) throws Exception {
+        PrivateKey privateKey = loadPrivate(privateKeyPath);
+
+        // Load the AES Secret Key
+        FileInputStream in = new FileInputStream(inputFile);
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] b = new byte[128];
+        in.read(b);
+        byte[] keyb = cipher.doFinal(b);
+        SecretKeySpec skey = new SecretKeySpec(keyb, "AES");
+
+        // Read the Initialization Vector
+        byte[] iv = new byte[128 / 8];
+        in.read(iv);
+        IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+        // Decrypt the File Contents
+        Cipher ci = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        ci.init(Cipher.DECRYPT_MODE, skey, ivspec);
+        try (FileOutputStream out = new FileOutputStream(inputFile + ".ver")) {
+            processFile(ci, in, out);
+        }
+    }
+
+    private static void processFile(Cipher ci, InputStream in, OutputStream out)
+            throws javax.crypto.IllegalBlockSizeException,
+            javax.crypto.BadPaddingException,
+            java.io.IOException {
+        byte[] ibuf = new byte[1024];
+        int len;
+        while ((len = in.read(ibuf)) != -1) {
+            byte[] obuf = ci.update(ibuf, 0, len);
+            if (obuf != null) out.write(obuf);
+        }
+        byte[] obuf = ci.doFinal();
+        if (obuf != null) out.write(obuf);
+    }
 }

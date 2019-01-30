@@ -1,5 +1,5 @@
 import com.random.Encryption;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -104,6 +104,30 @@ public class EncryptionTest {
             assert (plaintext.equals(res));
             System.out.println(res);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testEncryptFile() {
+        try {
+            Encryption.encryptFile(
+                    System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.pub",
+                    System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testDecryptFile() {
+        try {
+            Encryption.decrypFile(
+                    System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.key",
+                    System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg.enc"
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }

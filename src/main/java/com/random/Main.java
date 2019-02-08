@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
             System.setProperty("file.encoding", "UTF-8");
             Field charset = Charset.class.getDeclaredField("defaultCharset");
@@ -16,22 +16,25 @@ public class Main {
         } catch (IllegalAccessException | NoSuchFieldException e) {
             e.printStackTrace();
         }
-
-        int index = 0;
-        String mode = args[index++];
-        String[] params = Arrays.copyOfRange(args, index, args.length);
-        if ("-g".equals(mode)) {
-            saveKeyPairBase64(params);
-        } else if ("-e".equals(mode)) {
-            encrypt(params);
-        } else if ("-d".equals(mode)) {
-            decrypt(params);
-        } else if ("-sf".equals(mode)) {
-            saveToFileFromFileWithEncryptedStr(params);
-        } else if ("-ef".equals(mode)) {
-            encryptFile(params);
-        } else if ("-df".equals(mode)) {
-            decrypFile(params);
+        try {
+            int index = 0;
+            String mode = args[index++];
+            String[] params = Arrays.copyOfRange(args, index, args.length);
+            if ("-g".equals(mode)) {
+                saveKeyPairBase64(params);
+            } else if ("-e".equals(mode)) {
+                encrypt(params);
+            } else if ("-d".equals(mode)) {
+                decrypt(params);
+            } else if ("-sf".equals(mode)) {
+                saveToFileFromFileWithEncryptedStr(params);
+            } else if ("-ef".equals(mode)) {
+                encryptFile(params);
+            } else if ("-df".equals(mode)) {
+                decrypFile(params);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -44,6 +47,7 @@ public class Main {
     private static void encrypt(String[] args) {
         if (args.length < 2) {
             System.out.println("Wrong params");
+            return;
         }
         String pubKeyPath = args[0];
         String originalStr = args[1];
@@ -53,6 +57,7 @@ public class Main {
     private static void decrypt(String[] args) {
         if (args.length < 2) {
             System.out.println("Wrong params");
+            return;
         }
         String privateKeyPath = args[0];
         String encryptedStr = args[1];
@@ -62,6 +67,7 @@ public class Main {
     private static void saveToFileFromFileWithEncryptedStr(String[] args) throws IOException {
         if (args.length < 2) {
             System.out.println("Wrong params");
+            return;
         }
         String privateKeyPath = args[0];
         String filePath = args[1];
@@ -71,6 +77,7 @@ public class Main {
     private static void encryptFile(String[] args) throws Exception {
         if (args.length < 2) {
             System.out.println("Wrong params");
+            return;
         }
         String pubKeyPath = args[0];
         String originalFile = args[1];
@@ -80,6 +87,7 @@ public class Main {
     private static void decrypFile(String[] args) throws Exception {
         if (args.length < 2) {
             System.out.println("Wrong params");
+            return;
         }
         String privateKeyPath = args[0];
         String encryptedFile = args[1];

@@ -1,4 +1,5 @@
-import com.random.Encryption;
+import com.random.encryption.Encryption;
+import com.random.encryption.RsaEnc;
 import org.junit.Test;
 
 import javax.crypto.BadPaddingException;
@@ -52,16 +53,16 @@ public class EncryptionTest {
 
             String plaintext = "Секрет!";
             byte[] bytes = plaintext.getBytes("UTF-8");
-            byte[] encrypted = Encryption.blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
-            String encryptedStr = Encryption.byte2Hex(encrypted);
+            byte[] encrypted = RsaEnc.blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
+            String encryptedStr = RsaEnc.byte2Hex(encrypted);
             System.out.println(encryptedStr);
 
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] bts = Encryption.hex2Byte(encryptedStr);
-            byte[] decrypted = Encryption.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
+            byte[] bts = RsaEnc.hex2Byte(encryptedStr);
+            byte[] decrypted = RsaEnc.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
 //            String resStr = new String(decrypted, "UTF-8");
 //            System.out.println(resStr);
-            String res = Encryption.removeTheTrash(new String(decrypted, "UTF-8"));
+            String res = RsaEnc.removeTheTrash(new String(decrypted, "UTF-8"));
             System.out.println(res);
             assert (plaintext.equals(res));
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | UnsupportedEncodingException | IllegalBlockSizeException e) {
@@ -84,8 +85,8 @@ public class EncryptionTest {
 
             String plaintext = "Секрет!";
             byte[] bytes = plaintext.getBytes("UTF-8");
-            byte[] encrypted = Encryption.blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
-            String encryptedStr = Encryption.byte2Hex(encrypted);
+            byte[] encrypted = RsaEnc.blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
+            String encryptedStr = RsaEnc.byte2Hex(encrypted);
             System.out.println("encryptedStr: " + encryptedStr);
             byte[] keyBytes = Base64.getEncoder().withoutPadding().encode(privateKey.getEncoded());
 
@@ -95,11 +96,11 @@ public class EncryptionTest {
             PrivateKey privateKeyNew = kf.generatePrivate(spec);
 
             cipher.init(Cipher.DECRYPT_MODE, privateKeyNew);
-            byte[] bts = Encryption.hex2Byte(encryptedStr);
-            byte[] decrypted = Encryption.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
+            byte[] bts = RsaEnc.hex2Byte(encryptedStr);
+            byte[] decrypted = RsaEnc.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
 //            String resStr = new String(decrypted, "UTF-8");
 //            System.out.println(resStr);
-            String res = Encryption.removeTheTrash(new String(decrypted, "UTF-8"));
+            String res = RsaEnc.removeTheTrash(new String(decrypted, "UTF-8"));
 
             assert (plaintext.equals(res));
             System.out.println(res);

@@ -1,9 +1,10 @@
-package com.random;
+package com.random.encryption;
 
-import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -15,8 +16,7 @@ import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Encryption {
-
+public class RsaEnc {
     private static String RSA = "RSA";
 
     private static String EXT_PUBLIC = "pub";
@@ -67,7 +67,7 @@ public class Encryption {
     //</editor-fold>
 
     //<editor-fold desc="decrypt">
-    static String decrypt(String privateKeyPath, String encryptedStr) {
+    public static String decrypt(String privateKeyPath, String encryptedStr) {
         try {
             PrivateKey privateKey = loadPrivate(privateKeyPath);
             Cipher cipher = Cipher.getInstance(RSA);
@@ -180,7 +180,6 @@ public class Encryption {
 
     public static byte[] hex2Byte(String str) {
         int len = str.length();
-//        System.out.println("len:" + len);
         if (len % 2 != 0) {
             return null;
         }
@@ -239,8 +238,7 @@ public class Encryption {
         return result.toString();
     }
 
-    @Deprecated
-    private void saveKeyPair(String pathToSave, KeyPair keyPair) throws IOException {
+    private void saveKeyPairAsBytes(String pathToSave, KeyPair keyPair) throws IOException {
         PrivateKey privateKey = keyPair.getPrivate();
         PublicKey publicKey = keyPair.getPublic();
 
@@ -309,7 +307,7 @@ public class Encryption {
 //        return new KeyPair(publicKey, privateKey);
 //    }
 
-    private static PrivateKey loadPrivate(String path)
+    static PrivateKey loadPrivate(String path)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keyBytes = Files.readAllBytes(Paths.get(path));
         byte[] privateKeyBytes = Base64.getDecoder().decode(keyBytes);
@@ -318,7 +316,7 @@ public class Encryption {
         return kf.generatePrivate(spec);
     }
 
-    private static PublicKey loadPublic(String path)
+    static PublicKey loadPublic(String path)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keyBytes = Files.readAllBytes(Paths.get(path));
         X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.getDecoder().decode(keyBytes));
@@ -326,71 +324,4 @@ public class Encryption {
         return kf.generatePublic(spec);
     }
     //</editor-fold>
-
-    public static void encryptFile(String pubKeyPath, String inputFile) throws Exception {
-        SecureRandom srandom = new SecureRandom();
-        byte[] iv = new byte[128 / 8];
-        srandom.nextBytes(iv);
-        IvParameterSpec ivspec = new IvParameterSpec(iv);
-
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
-
-        kgen.init(128);
-        SecretKey skey = kgen.generateKey();
-
-        PublicKey publicKey = loadPublic(pubKeyPath);
-
-        FileOutputStream out = new FileOutputStream(inputFile + ".enc");
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] b = cipher.doFinal(skey.getEncoded());
-        out.write(b);
-        out.write(iv);
-
-        Cipher ci = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        ci.init(Cipher.ENCRYPT_MODE, skey, ivspec);
-        try (FileInputStream in = new FileInputStream(inputFile)) {
-            processFile(ci, in, out);
-        }
-        out.close();
-    }
-
-    public static void decrypFile(String privateKeyPath, String inputFile) throws Exception {
-        PrivateKey privateKey = loadPrivate(privateKeyPath);
-
-        // Load the AES Secret Key
-        FileInputStream in = new FileInputStream(inputFile);
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        byte[] b = new byte[128];
-        in.read(b);
-        byte[] keyb = cipher.doFinal(b);
-        SecretKeySpec skey = new SecretKeySpec(keyb, "AES");
-
-        // Read the Initialization Vector
-        byte[] iv = new byte[128 / 8];
-        in.read(iv);
-        IvParameterSpec ivspec = new IvParameterSpec(iv);
-
-        // Decrypt the File Contents
-        Cipher ci = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        ci.init(Cipher.DECRYPT_MODE, skey, ivspec);
-        try (FileOutputStream out = new FileOutputStream(inputFile + ".ver")) {
-            processFile(ci, in, out);
-        }
-    }
-
-    private static void processFile(Cipher ci, InputStream in, OutputStream out)
-            throws javax.crypto.IllegalBlockSizeException,
-            javax.crypto.BadPaddingException,
-            java.io.IOException {
-        byte[] ibuf = new byte[1024];
-        int len;
-        while ((len = in.read(ibuf)) != -1) {
-            byte[] obuf = ci.update(ibuf, 0, len);
-            if (obuf != null) out.write(obuf);
-        }
-        byte[] obuf = ci.doFinal();
-        if (obuf != null) out.write(obuf);
-    }
 }

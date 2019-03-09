@@ -1,5 +1,8 @@
 package com.random;
 
+import com.random.encryption.Encryption;
+import com.random.encryption.RsaEnc;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -41,7 +44,7 @@ public class Main {
     private static void saveKeyPairBase64(String[] args) {
         String keyPairName = args.length > 0 ? args[0] : "key";
         String pathToSave = args.length > 1 ? args[1] : ".\\";
-        Encryption.saveKeyPairBase64(pathToSave, keyPairName);
+        RsaEnc.saveKeyPairBase64(pathToSave, keyPairName);
     }
 
     private static void encrypt(String[] args) {
@@ -51,7 +54,7 @@ public class Main {
         }
         String pubKeyPath = args[0];
         String originalStr = args[1];
-        System.out.println(Encryption.encrypt(pubKeyPath, originalStr));
+        System.out.println(RsaEnc.encrypt(pubKeyPath, originalStr));
     }
 
     private static void decrypt(String[] args) {
@@ -61,7 +64,7 @@ public class Main {
         }
         String privateKeyPath = args[0];
         String encryptedStr = args[1];
-        System.out.println(Encryption.decrypt(privateKeyPath, encryptedStr));
+        System.out.println(RsaEnc.decrypt(privateKeyPath, encryptedStr));
     }
 
     private static void saveToFileFromFileWithEncryptedStr(String[] args) throws IOException {
@@ -71,7 +74,7 @@ public class Main {
         }
         String privateKeyPath = args[0];
         String filePath = args[1];
-        Utils.saveToFile(Encryption.decrypt(privateKeyPath, Utils.getStringFromReader(new FileReader(filePath))));
+        Utils.saveToFile(RsaEnc.decrypt(privateKeyPath, Utils.getStringFromReader(new FileReader(filePath))));
     }
 
     private static void encryptFile(String[] args) throws Exception {

@@ -113,7 +113,7 @@ public class EncryptionTest {
     @Test
     public void testEncryptFile() {
         try {
-            Encryption.encryptFile(
+            Encryption.encryptFileWithName(
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.pub",
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg"
             );
@@ -125,7 +125,7 @@ public class EncryptionTest {
     @Test
     public void testDecryptFile() {
         try {
-            Encryption.decrypFile(
+            Encryption.decrypFileWithName(
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.key",
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg.enc"
             );

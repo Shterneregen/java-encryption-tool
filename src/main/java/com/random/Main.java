@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 public class Main {
+
     public static void main(String[] args) {
         try {
             System.setProperty("file.encoding", "UTF-8");
@@ -34,7 +35,7 @@ public class Main {
             } else if ("-ef".equals(mode)) {
                 encryptFile(params);
             } else if ("-df".equals(mode)) {
-                decrypFile(params);
+                decryptFile(params);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,17 +85,17 @@ public class Main {
         }
         String pubKeyPath = args[0];
         String originalFile = args[1];
-        Encryption.encryptFile(pubKeyPath, originalFile);
+        Encryption.encryptFileWithName(pubKeyPath, originalFile);
     }
 
-    private static void decrypFile(String[] args) throws Exception {
+    private static void decryptFile(String[] args) throws Exception {
         if (args.length < 2) {
             System.out.println("Wrong params");
             return;
         }
         String privateKeyPath = args[0];
         String encryptedFile = args[1];
-        Encryption.decrypFile(privateKeyPath, encryptedFile);
+        Encryption.decrypFileWithName(privateKeyPath, encryptedFile);
     }
 
 }

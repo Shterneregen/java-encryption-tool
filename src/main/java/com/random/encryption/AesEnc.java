@@ -4,15 +4,21 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
 import java.util.Date;
 
-public class AesEnc {
+class AesEnc {
 
-    public static void encryptFile(PublicKey publicKey, InputStream in, OutputStream out) throws Exception {
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
+    private static final String RSA_ECB_PKCS_1_PADDING = "RSA/ECB/PKCS1Padding";
+    private static final String AES_CBC_PKCS_5_PADDING = "AES/CBC/PKCS5Padding";
+    private static final String AES = "AES";
+
+    private AesEnc() {
+    }
+
+    static void encryptFile(PublicKey publicKey, InputStream in, OutputStream out) throws Exception {
+        KeyGenerator kgen = KeyGenerator.getInstance(AES);
         kgen.init(128);
         SecretKey secretKey = kgen.generateKey();
 
@@ -21,11 +27,11 @@ public class AesEnc {
         srandom.nextBytes(iv);
         IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        Cipher rsaCipher = Cipher.getInstance(RSA_ECB_PKCS_1_PADDING);
         rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] secretKeyEncoded = rsaCipher.doFinal(secretKey.getEncoded());
 
-        Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher aesCipher = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
         aesCipher.init(Cipher.ENCRYPT_MODE, secretKey, ivspec);
 
         out.write(secretKeyEncoded);
@@ -33,25 +39,25 @@ public class AesEnc {
         processFile(aesCipher, in, out);
     }
 
-    public static void decryptFile(PrivateKey privateKey, InputStream in, OutputStream out) throws Exception {
-        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+    static void decryptFile(PrivateKey privateKey, InputStream in, OutputStream out) throws Exception {
+        Cipher rsaCipher = Cipher.getInstance(RSA_ECB_PKCS_1_PADDING);
         rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
         byte[] b = new byte[128];
         in.read(b);
         byte[] keyb = rsaCipher.doFinal(b);
-        SecretKeySpec skey = new SecretKeySpec(keyb, "AES");
+        SecretKeySpec skey = new SecretKeySpec(keyb, AES);
 
         byte[] iv = new byte[128 / 8];
         in.read(iv);
         IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-        Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher aesCipher = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
         aesCipher.init(Cipher.DECRYPT_MODE, skey, ivspec);
         processFile(aesCipher, in, out);
     }
 
-    public static void encryptFileWithName(PublicKey publicKey, String inputFile) throws Exception {
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
+    static void encryptFileWithName(PublicKey publicKey, String inputFile) throws Exception {
+        KeyGenerator kgen = KeyGenerator.getInstance(AES);
         kgen.init(128);
         SecretKey secretKey = kgen.generateKey();
 
@@ -60,14 +66,14 @@ public class AesEnc {
         srandom.nextBytes(iv);
         IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        Cipher rsaCipher = Cipher.getInstance(RSA_ECB_PKCS_1_PADDING);
         rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] secretKeyEncoded = rsaCipher.doFinal(secretKey.getEncoded());
 
-        Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher aesCipher = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
         aesCipher.init(Cipher.ENCRYPT_MODE, secretKey, ivspec);
 
-        byte[] name = aesCipher.doFinal(inputFile.getBytes("UTF-8"));
+        byte[] name = aesCipher.doFinal(inputFile.getBytes(StandardCharsets.UTF_8));
         String fileName = String.format("%1$tY%1$tm%1$td_%1$tH%1$tM%1$tS", new Date());
 
         try (FileInputStream in = new FileInputStream(inputFile);
@@ -80,24 +86,24 @@ public class AesEnc {
         }
     }
 
-    public static void decryptFileWithName(PrivateKey privateKey, String inputFile) throws Exception {
+    static void decryptFileWithName(PrivateKey privateKey, String inputFile) throws Exception {
         try (FileInputStream in = new FileInputStream(inputFile)) {
             int l = in.read();
             byte[] nb = new byte[l];
             in.read(nb);
 
-            Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            Cipher rsaCipher = Cipher.getInstance(RSA_ECB_PKCS_1_PADDING);
             rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] b = new byte[128];
             in.read(b);
             byte[] keyb = rsaCipher.doFinal(b);
-            SecretKeySpec skey = new SecretKeySpec(keyb, "AES");
+            SecretKeySpec skey = new SecretKeySpec(keyb, AES);
 
             byte[] iv = new byte[128 / 8];
             in.read(iv);
             IvParameterSpec ivspec = new IvParameterSpec(iv);
 
-            Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher aesCipher = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
             aesCipher.init(Cipher.DECRYPT_MODE, skey, ivspec);
 
             String name = new String(aesCipher.doFinal(nb));

@@ -5,6 +5,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
@@ -17,10 +18,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RsaEnc {
-    private static String RSA = "RSA";
 
-    private static String EXT_PUBLIC = "pub";
-    private static String EXT_PRIVATE = "key";
+    private static final Logger LOG = Logger.getLogger(RsaEnc.class.getName());
+
+    private static final String RSA = "RSA";
+    private static final String EXT_PUBLIC = "pub";
+    private static final String EXT_PRIVATE = "key";
 
     /**
      * Формирует пару открытый/закрытый ключ по заданному открытому ключу
@@ -32,10 +35,9 @@ public class RsaEnc {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
             kpg.initialize(1024);
             KeyPair tempKeypair = kpg.generateKeyPair();
-            KeyPair keypair = publicKey == null
+            return publicKey == null
                     ? kpg.generateKeyPair()
                     : new KeyPair(publicKey, tempKeypair.getPrivate());
-            return keypair;
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
             return null;
@@ -47,7 +49,7 @@ public class RsaEnc {
         try {
             return encrypt(loadPublic(pubKeyPath), originalStr);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
         return "";
     }
@@ -56,7 +58,7 @@ public class RsaEnc {
         try {
             Cipher cipher = Cipher.getInstance(RSA);
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            byte[] bytes = plaintext.getBytes("UTF-8");
+            byte[] bytes = plaintext.getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
             return byte2Hex(encrypted);
         } catch (Exception ex) {
@@ -74,7 +76,7 @@ public class RsaEnc {
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] bts = hex2Byte(encryptedStr);
             byte[] decrypted = blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
-            String resStr = new String(decrypted, "UTF-8");
+            String resStr = new String(decrypted, StandardCharsets.UTF_8);
             return removeTheTrash(resStr);
         } catch (Exception ex) {
             Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
@@ -140,9 +142,9 @@ public class RsaEnc {
         return toReturn;
     }
 
-    public static String byte2Hex(byte b[]) {
+    public static String byte2Hex(byte[] b) {
         StringBuilder hs = new StringBuilder();
-        String stmp = "";
+        String stmp;
         for (byte aB : b) {
             stmp = Integer.toHexString(aB & 0xff);
             if (stmp.length() == 1) {
@@ -181,9 +183,9 @@ public class RsaEnc {
     public static byte[] hex2Byte(String str) {
         int len = str.length();
         if (len % 2 != 0) {
-            return null;
+            return new byte[0];
         }
-        byte r[] = new byte[len / 2];
+        byte[] r = new byte[len / 2];
         int k = 0;
         for (int i = 0; i < str.length() - 1; i += 2) {
             r[k] = hex2Byte(str.charAt(i), str.charAt(i + 1));
@@ -217,17 +219,12 @@ public class RsaEnc {
 
     //<editor-fold desc="I/O">
 
-    /**
-     * Выводит в консоль ключевую пару
-     *
-     * @param keyPair ключевая пара
-     */
-    void dumpKeyPair(KeyPair keyPair) {
+    void generateAndShowKeyPair(KeyPair keyPair) {
         PublicKey pub = keyPair.getPublic();
-        System.out.println("Public Key: " + getHexString(pub.getEncoded()));
+        LOG.info("Public Key: " + getHexString(pub.getEncoded()));
 
         PrivateKey priv = keyPair.getPrivate();
-        System.out.println("Private Key: " + getHexString(priv.getEncoded()));
+        LOG.info("Private Key: " + getHexString(priv.getEncoded()));
     }
 
     private String getHexString(byte[] b) {
@@ -244,15 +241,15 @@ public class RsaEnc {
 
         // Store Public Key.
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        FileOutputStream fos = new FileOutputStream(pathToSave + "key." + EXT_PUBLIC);
-        fos.write(x509EncodedKeySpec.getEncoded());
-        fos.close();
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + "key." + EXT_PUBLIC)) {
+            fos.write(x509EncodedKeySpec.getEncoded());
+        }
 
         // Store Private Key.
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        fos = new FileOutputStream(pathToSave + "key." + EXT_PRIVATE);
-        fos.write(pkcs8EncodedKeySpec.getEncoded());
-        fos.close();
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + "key." + EXT_PRIVATE)) {
+            fos.write(pkcs8EncodedKeySpec.getEncoded());
+        }
     }
 
     public static void saveKeyPairBase64(String pathToSave, String keyPairName) {
@@ -265,18 +262,18 @@ public class RsaEnc {
             PublicKey publicKey = keyPair.getPublic();
 
             // Store Public Key.
-            FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC);
-//        fos.write("-----BEGIN RSA PUBLIC KEY-----\n");
-            fos.write(Base64.getEncoder().encodeToString(publicKey.getEncoded()).getBytes("UTF-8"));
-//        fos.write("\n-----END RSA PUBLIC KEY-----\n");
-            fos.close();
+            try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC)) {
+//                fos.write("-----BEGIN RSA PUBLIC KEY-----\n");
+                fos.write(Base64.getEncoder().encodeToString(publicKey.getEncoded()).getBytes("UTF-8"));
+//                fos.write("\n-----END RSA PUBLIC KEY-----\n");
+            }
 
             // Store Private Key.
-            fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE);
-            fos.write(Base64.getEncoder().encodeToString(privateKey.getEncoded()).getBytes("UTF-8"));
-            fos.close();
+            try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE)) {
+                fos.write(Base64.getEncoder().encodeToString(privateKey.getEncoded()).getBytes("UTF-8"));
+            }
         } catch (NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 

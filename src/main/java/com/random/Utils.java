@@ -12,11 +12,15 @@ import java.util.logging.Logger;
 
 class Utils {
 
+    private static final Logger LOG = Logger.getLogger(Utils.class.getName());
+
+    private Utils() {
+    }
+
     static void saveToFile(String str) throws IOException {
         String[] lines = str.split(",");
         File file = new File(getCurrentTime() + ".txt");
         file.createNewFile();
-//        Files.write(file.toPath(), str.getBytes("UTF-8"));
         Files.write(file.toPath(), Arrays.asList(lines));
     }
 
@@ -25,7 +29,7 @@ class Utils {
         char[] buffer = new char[BUFFER_SIZE];
         Reader bufferedReader = new BufferedReader(reader, BUFFER_SIZE);
         StringBuilder builder = new StringBuilder();
-        int length = 0;
+        int length;
         while ((length = bufferedReader.read(buffer, 0, BUFFER_SIZE)) != -1) {
             builder.append(buffer, 0, length);
         }
@@ -57,14 +61,13 @@ class Utils {
             while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
             }
-            System.out.println(response.toString());
+            LOG.log(Level.INFO, "Response: {0}", response);
         } catch (IOException e) {
-            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, e);
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         } finally {
             close(in);
             close(isr);
         }
-
     }
 
     private static void close(Closeable closeable) {
@@ -72,7 +75,7 @@ class Utils {
             try {
                 closeable.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                LOG.log(Level.SEVERE, e.getMessage(), e);
             }
         }
     }

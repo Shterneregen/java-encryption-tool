@@ -7,12 +7,15 @@ import java.security.PublicKey;
 
 public class Encryption {
 
+    private Encryption() {
+    }
+
     public static void encryptFileWithName(String pubKeyPath, String inputFile) throws Exception {
         PublicKey publicKey = RsaEnc.loadPublic(pubKeyPath);
         AesEnc.encryptFileWithName(publicKey, inputFile);
     }
 
-    public static void decrypFileWithName(String privateKeyPath, String inputFile) throws Exception {
+    public static void decryptFileWithName(String privateKeyPath, String inputFile) throws Exception {
         PrivateKey privateKey = RsaEnc.loadPrivate(privateKeyPath);
         AesEnc.decryptFileWithName(privateKey, inputFile);
     }

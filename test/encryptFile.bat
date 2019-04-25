@@ -1,5 +1,5 @@
 @echo off
-set key=.\key.pub
-set /p file=Enter file name to encrypt: 
-java -jar coder.jar -ef %key% %file%
+set KEY=.\key.pub
+set /p FILE=Enter file name to encrypt: 
+java -jar coder.jar -ef %KEY% "%FILE%"
 pause

@@ -6,15 +6,18 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class EncryptionTest {
 
-    private static String RSA = "RSA";
+    private static final Logger LOG = Logger.getLogger(EncryptionTest.class.getName());
+    private static final String RSA = "RSA";
 
     @Test
     public void testGenerate64() {
@@ -26,15 +29,15 @@ public class EncryptionTest {
             PrivateKey privateKey = keyPair.getPrivate();
             PublicKey publicKey = keyPair.getPublic();
 
-            System.out.println(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
-            System.out.println(Base64.getEncoder().encodeToString(privateKey.getEncoded()));
+            LOG.info(Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+            LOG.info(Base64.getEncoder().encodeToString(privateKey.getEncoded()));
 
 //            X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
 //            PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
 //            System.out.println(Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded()));
 //            System.out.println(Base64.getEncoder().encodeToString(pkcs8EncodedKeySpec.getEncoded()));
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -52,7 +55,7 @@ public class EncryptionTest {
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
             String plaintext = "Секрет!";
-            byte[] bytes = plaintext.getBytes("UTF-8");
+            byte[] bytes = plaintext.getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = RsaEnc.blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
             String encryptedStr = RsaEnc.byte2Hex(encrypted);
             System.out.println(encryptedStr);
@@ -62,11 +65,12 @@ public class EncryptionTest {
             byte[] decrypted = RsaEnc.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
 //            String resStr = new String(decrypted, "UTF-8");
 //            System.out.println(resStr);
-            String res = RsaEnc.removeTheTrash(new String(decrypted, "UTF-8"));
+            String res = RsaEnc.removeTheTrash(new String(decrypted, StandardCharsets.UTF_8));
             System.out.println(res);
             assert (plaintext.equals(res));
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | UnsupportedEncodingException | IllegalBlockSizeException e) {
-            e.printStackTrace();
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
+                | BadPaddingException | IllegalBlockSizeException e) {
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -84,7 +88,7 @@ public class EncryptionTest {
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
             String plaintext = "Секрет!";
-            byte[] bytes = plaintext.getBytes("UTF-8");
+            byte[] bytes = plaintext.getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = RsaEnc.blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
             String encryptedStr = RsaEnc.byte2Hex(encrypted);
             System.out.println("encryptedStr: " + encryptedStr);
@@ -100,13 +104,13 @@ public class EncryptionTest {
             byte[] decrypted = RsaEnc.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
 //            String resStr = new String(decrypted, "UTF-8");
 //            System.out.println(resStr);
-            String res = RsaEnc.removeTheTrash(new String(decrypted, "UTF-8"));
+            String res = RsaEnc.removeTheTrash(new String(decrypted, StandardCharsets.UTF_8));
 
             assert (plaintext.equals(res));
             System.out.println(res);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -118,19 +122,19 @@ public class EncryptionTest {
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg"
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
     @Test
     public void testDecryptFile() {
         try {
-            Encryption.decrypFileWithName(
+            Encryption.decryptFileWithName(
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.key",
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg.enc"
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 }

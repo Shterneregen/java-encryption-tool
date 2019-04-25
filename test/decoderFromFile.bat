@@ -1,8 +1,6 @@
 @echo off
 chcp 65001 2>nul >nul
-
-set key=.\keys\181107.00\key.pr
-REM set key=.\181107
-set file=.\text.txt
-java "-Dfile.encoding=UTF8" -jar coder.jar -sf %key% %file%
+set KEY=.\key.key
+set FILE=.\text.txt
+java "-Dfile.encoding=UTF8" -jar coder.jar -sf %KEY% %FILE%
 pause

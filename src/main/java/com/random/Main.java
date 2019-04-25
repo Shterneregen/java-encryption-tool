@@ -8,8 +8,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
+
+    private static final Logger LOG = Logger.getLogger(Main.class.getName());
+    private static final String WRONG_PARAMS = "Wrong params";
 
     public static void main(String[] args) {
         try {
@@ -18,7 +23,7 @@ public class Main {
             charset.setAccessible(true);
             charset.set(null, null);
         } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
         try {
             int index = 0;
@@ -27,9 +32,9 @@ public class Main {
             if ("-g".equals(mode)) {
                 saveKeyPairBase64(params);
             } else if ("-e".equals(mode)) {
-                encrypt(params);
+                encryptString(params);
             } else if ("-d".equals(mode)) {
-                decrypt(params);
+                decryptString(params);
             } else if ("-sf".equals(mode)) {
                 saveToFileFromFileWithEncryptedStr(params);
             } else if ("-ef".equals(mode)) {
@@ -38,7 +43,7 @@ public class Main {
                 decryptFile(params);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
@@ -48,29 +53,29 @@ public class Main {
         RsaEnc.saveKeyPairBase64(pathToSave, keyPairName);
     }
 
-    private static void encrypt(String[] args) {
+    private static void encryptString(String[] args) {
         if (args.length < 2) {
-            System.out.println("Wrong params");
+            LOG.severe(WRONG_PARAMS);
             return;
         }
         String pubKeyPath = args[0];
         String originalStr = args[1];
-        System.out.println(RsaEnc.encrypt(pubKeyPath, originalStr));
+        LOG.info(RsaEnc.encrypt(pubKeyPath, originalStr));
     }
 
-    private static void decrypt(String[] args) {
+    private static void decryptString(String[] args) {
         if (args.length < 2) {
-            System.out.println("Wrong params");
+            LOG.severe(WRONG_PARAMS);
             return;
         }
         String privateKeyPath = args[0];
         String encryptedStr = args[1];
-        System.out.println(RsaEnc.decrypt(privateKeyPath, encryptedStr));
+        LOG.info(RsaEnc.decrypt(privateKeyPath, encryptedStr));
     }
 
     private static void saveToFileFromFileWithEncryptedStr(String[] args) throws IOException {
         if (args.length < 2) {
-            System.out.println("Wrong params");
+            LOG.severe(WRONG_PARAMS);
             return;
         }
         String privateKeyPath = args[0];
@@ -80,7 +85,7 @@ public class Main {
 
     private static void encryptFile(String[] args) throws Exception {
         if (args.length < 2) {
-            System.out.println("Wrong params");
+            LOG.severe(WRONG_PARAMS);
             return;
         }
         String pubKeyPath = args[0];
@@ -90,12 +95,12 @@ public class Main {
 
     private static void decryptFile(String[] args) throws Exception {
         if (args.length < 2) {
-            System.out.println("Wrong params");
+            LOG.severe(WRONG_PARAMS);
             return;
         }
         String privateKeyPath = args[0];
         String encryptedFile = args[1];
-        Encryption.decrypFileWithName(privateKeyPath, encryptedFile);
+        Encryption.decryptFileWithName(privateKeyPath, encryptedFile);
     }
 
 }

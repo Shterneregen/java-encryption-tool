@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
-    private static final String WRONG_PARAMS = "Wrong params";
+    private static final String WRONG_PARAMS = "Wrong number of parameters!";
 
     public static void main(String[] args) {
         try {
@@ -30,7 +31,9 @@ public class Main {
             String mode = args[index++];
             String[] params = Arrays.copyOfRange(args, index, args.length);
             if ("-g".equals(mode)) {
-                saveKeyPairBase64(params);
+                saveKeyPair(params, true);
+            } else if ("-gb".equals(mode)) {
+                saveKeyPair(params, false);
             } else if ("-e".equals(mode)) {
                 encryptString(params);
             } else if ("-d".equals(mode)) {
@@ -47,60 +50,56 @@ public class Main {
         }
     }
 
-    private static void saveKeyPairBase64(String[] args) {
+    private static void saveKeyPair(String[] args, boolean base64) throws IOException, NoSuchAlgorithmException {
+        validateParams(args, 2);
         String keyPairName = args.length > 0 ? args[0] : "key";
         String pathToSave = args.length > 1 ? args[1] : ".\\";
-        RsaEnc.saveKeyPairBase64(pathToSave, keyPairName);
+        if (base64) {
+            RsaEnc.saveKeyPairBase64(pathToSave, keyPairName);
+        } else {
+            RsaEnc.saveKeyPairBytes(pathToSave, keyPairName);
+        }
     }
 
     private static void encryptString(String[] args) {
-        if (args.length < 2) {
-            LOG.severe(WRONG_PARAMS);
-            return;
-        }
+        validateParams(args, 2);
         String pubKeyPath = args[0];
         String originalStr = args[1];
         LOG.info(RsaEnc.encrypt(pubKeyPath, originalStr));
     }
 
     private static void decryptString(String[] args) {
-        if (args.length < 2) {
-            LOG.severe(WRONG_PARAMS);
-            return;
-        }
+        validateParams(args, 2);
         String privateKeyPath = args[0];
         String encryptedStr = args[1];
         LOG.info(RsaEnc.decrypt(privateKeyPath, encryptedStr));
     }
 
     private static void saveToFileFromFileWithEncryptedStr(String[] args) throws IOException {
-        if (args.length < 2) {
-            LOG.severe(WRONG_PARAMS);
-            return;
-        }
+        validateParams(args, 2);
         String privateKeyPath = args[0];
         String filePath = args[1];
         Utils.saveToFile(RsaEnc.decrypt(privateKeyPath, Utils.getStringFromReader(new FileReader(filePath))));
     }
 
     private static void encryptFile(String[] args) throws Exception {
-        if (args.length < 2) {
-            LOG.severe(WRONG_PARAMS);
-            return;
-        }
+        validateParams(args, 2);
         String pubKeyPath = args[0];
         String originalFile = args[1];
         Encryption.encryptFileWithName(pubKeyPath, originalFile);
     }
 
     private static void decryptFile(String[] args) throws Exception {
-        if (args.length < 2) {
-            LOG.severe(WRONG_PARAMS);
-            return;
-        }
+        validateParams(args, 2);
         String privateKeyPath = args[0];
         String encryptedFile = args[1];
         Encryption.decryptFileWithName(privateKeyPath, encryptedFile);
+    }
+
+    private static void validateParams(String[] args, int validParamNumber) {
+        if (args.length < validParamNumber) {
+            throw new IllegalArgumentException(WRONG_PARAMS);
+        }
     }
 
 }

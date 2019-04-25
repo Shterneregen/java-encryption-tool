@@ -8,7 +8,6 @@ repositories {
 }
 dependencies {
     testCompile 'junit:junit:4.12'
-//    testCompile 'jorg.junit.jupiter:junit-jupiter-api:5.4.0-M1'
 }
 
 mainClassName = 'com.random.Main'

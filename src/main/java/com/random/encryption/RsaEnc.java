@@ -25,29 +25,10 @@ public class RsaEnc {
     private static final String EXT_PUBLIC = "pub";
     private static final String EXT_PRIVATE = "key";
 
-    /**
-     * Формирует пару открытый/закрытый ключ по заданному открытому ключу
-     *
-     * @param publicKey открытый ключ
-     */
-    private KeyPair createPair(PublicKey publicKey) {
-        try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-            kpg.initialize(1024);
-            KeyPair tempKeypair = kpg.generateKeyPair();
-            return publicKey == null
-                    ? kpg.generateKeyPair()
-                    : new KeyPair(publicKey, tempKeypair.getPrivate());
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-    }
-
     //<editor-fold desc="encrypt">
-    public static String encrypt(String pubKeyPath, String originalStr) {
+    public static String encrypt(String pubKeyPath, String plaintext) {
         try {
-            return encrypt(loadPublic(pubKeyPath), originalStr);
+            return encrypt(loadPublicKey(pubKeyPath), plaintext);
         } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
         }
@@ -61,8 +42,8 @@ public class RsaEnc {
             byte[] bytes = plaintext.getBytes(StandardCharsets.UTF_8);
             byte[] encrypted = blockCipher(bytes, Cipher.ENCRYPT_MODE, cipher);
             return byte2Hex(encrypted);
-        } catch (Exception ex) {
-            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
         return "no encrypt result";
     }
@@ -71,15 +52,15 @@ public class RsaEnc {
     //<editor-fold desc="decrypt">
     public static String decrypt(String privateKeyPath, String encryptedStr) {
         try {
-            PrivateKey privateKey = loadPrivate(privateKeyPath);
+            PrivateKey privateKey = loadPrivateKey(privateKeyPath);
             Cipher cipher = Cipher.getInstance(RSA);
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] bts = hex2Byte(encryptedStr);
             byte[] decrypted = blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
             String resStr = new String(decrypted, StandardCharsets.UTF_8);
             return removeTheTrash(resStr);
-        } catch (Exception ex) {
-            Logger.getLogger(Encryption.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.getMessage(), e);
         }
         return "no decrypt result";
     }
@@ -108,14 +89,14 @@ public class RsaEnc {
                 // add the result to our total result.
                 toReturn = append(toReturn, scrambled);
                 // here we calculate the length of the next buffer required
-                int newlength = length;
+                int newLength = length;
 
                 // if newlength would be longer than remaining bytes in the bytes array we shorten it.
                 if (i + length > bytes.length) {
-                    newlength = bytes.length - i;
+                    newLength = bytes.length - i;
                 }
                 // clean the buffer array
-                buffer = new byte[newlength];
+                buffer = new byte[newLength];
             }
             // copy byte into our buffer.
             buffer[i % length] = bytes[i];
@@ -219,10 +200,9 @@ public class RsaEnc {
 
     //<editor-fold desc="I/O">
 
-    void generateAndShowKeyPair(KeyPair keyPair) {
+    void showKeyPair(KeyPair keyPair) {
         PublicKey pub = keyPair.getPublic();
         LOG.info("Public Key: " + getHexString(pub.getEncoded()));
-
         PrivateKey priv = keyPair.getPrivate();
         LOG.info("Private Key: " + getHexString(priv.getEncoded()));
     }
@@ -235,88 +215,74 @@ public class RsaEnc {
         return result.toString();
     }
 
-    private void saveKeyPairAsBytes(String pathToSave, KeyPair keyPair) throws IOException {
-        PrivateKey privateKey = keyPair.getPrivate();
-        PublicKey publicKey = keyPair.getPublic();
+    public static void saveKeyPairBytes(String pathToSave, String keyPairName) throws IOException, NoSuchAlgorithmException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
+        kpg.initialize(1024);
+        KeyPair keyPair = kpg.generateKeyPair();
 
         // Store Public Key.
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(pathToSave + "key." + EXT_PUBLIC)) {
-            fos.write(x509EncodedKeySpec.getEncoded());
+//        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC)) {
+            fos.write(keyPair.getPublic().getEncoded());
+//            fos.write(x509EncodedKeySpec.getEncoded());
         }
 
         // Store Private Key.
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(pathToSave + "key." + EXT_PRIVATE)) {
-            fos.write(pkcs8EncodedKeySpec.getEncoded());
+//        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE)) {
+            fos.write(keyPair.getPrivate().getEncoded());
+//            fos.write(pkcs8EncodedKeySpec.getEncoded());
         }
     }
 
-    public static void saveKeyPairBase64(String pathToSave, String keyPairName) {
-        try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-            kpg.initialize(1024);
-            KeyPair keyPair = kpg.generateKeyPair();
+    public static void saveKeyPairBase64(String pathToSave, String keyPairName)
+            throws NoSuchAlgorithmException, IOException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
+        kpg.initialize(1024);
+        KeyPair keyPair = kpg.generateKeyPair();
 
-            PrivateKey privateKey = keyPair.getPrivate();
-            PublicKey publicKey = keyPair.getPublic();
-
-            // Store Public Key.
-            try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC)) {
+        // Store Public Key.
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC)) {
 //                fos.write("-----BEGIN RSA PUBLIC KEY-----\n");
-                fos.write(Base64.getEncoder().encodeToString(publicKey.getEncoded()).getBytes("UTF-8"));
+            fos.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()).getBytes("UTF-8"));
 //                fos.write("\n-----END RSA PUBLIC KEY-----\n");
-            }
+        }
 
-            // Store Private Key.
-            try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE)) {
-                fos.write(Base64.getEncoder().encodeToString(privateKey.getEncoded()).getBytes("UTF-8"));
-            }
-        } catch (NoSuchAlgorithmException | IOException e) {
-            LOG.log(Level.SEVERE, e.getMessage(), e);
+        // Store Private Key.
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE)) {
+            fos.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()).getBytes("UTF-8"));
         }
     }
 
-//    private static KeyPair loadKeyPair(String path, String algorithm)
-//            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-//        // Read Public Key.
-//        File filePublicKey = new File(path + "." + EXT_PUBLIC);
-//        FileInputStream fis = new FileInputStream(path + "." + EXT_PUBLIC);
-//        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
-//        fis.read(encodedPublicKey);
-//        fis.close();
-//
-//        // Read Private Key.
-//        File filePrivateKey = new File(path + "." + EXT_PRIVATE);
-//        fis = new FileInputStream(path + "." + EXT_PRIVATE);
-//        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
-//        fis.read(encodedPrivateKey);
-//        fis.close();
-//
-//        // Generate KeyPair.
-//        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
-//        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
-//        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-//
-//        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-//        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
-//
-//        return new KeyPair(publicKey, privateKey);
-//    }
-
-    static PrivateKey loadPrivate(String path)
+    static PrivateKey loadPrivateKey(String keyPath)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte[] keyBytes = Files.readAllBytes(Paths.get(path));
+        byte[] keyBytes = Files.readAllBytes(Paths.get(keyPath));
         byte[] privateKeyBytes = Base64.getDecoder().decode(keyBytes);
         EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
         KeyFactory kf = KeyFactory.getInstance(RSA);
         return kf.generatePrivate(spec);
     }
 
-    static PublicKey loadPublic(String path)
+    static PublicKey loadPublicKey(String keyPath)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte[] keyBytes = Files.readAllBytes(Paths.get(path));
+        byte[] keyBytes = Files.readAllBytes(Paths.get(keyPath));
         X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.getDecoder().decode(keyBytes));
+        KeyFactory kf = KeyFactory.getInstance(RSA);
+        return kf.generatePublic(spec);
+    }
+
+    static PrivateKey loadPrivateKeyFromBytes(String keyPath)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Files.readAllBytes(Paths.get(keyPath));
+        EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory kf = KeyFactory.getInstance(RSA);
+        return kf.generatePrivate(spec);
+    }
+
+    static PublicKey loadPublicKeyFromBytes(String keyPath)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Files.readAllBytes(Paths.get(keyPath));
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
         KeyFactory kf = KeyFactory.getInstance(RSA);
         return kf.generatePublic(spec);
     }

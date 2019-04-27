@@ -215,26 +215,6 @@ public class RsaEnc {
         return result.toString();
     }
 
-    public static void saveKeyPairBytes(String pathToSave, String keyPairName) throws IOException, NoSuchAlgorithmException {
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-        kpg.initialize(1024);
-        KeyPair keyPair = kpg.generateKeyPair();
-
-        // Store Public Key.
-//        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC)) {
-            fos.write(keyPair.getPublic().getEncoded());
-//            fos.write(x509EncodedKeySpec.getEncoded());
-        }
-
-        // Store Private Key.
-//        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE)) {
-            fos.write(keyPair.getPrivate().getEncoded());
-//            fos.write(pkcs8EncodedKeySpec.getEncoded());
-        }
-    }
-
     public static void saveKeyPairBase64(String pathToSave, String keyPairName)
             throws NoSuchAlgorithmException, IOException {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
@@ -269,6 +249,22 @@ public class RsaEnc {
         X509EncodedKeySpec spec = new X509EncodedKeySpec(Base64.getDecoder().decode(keyBytes));
         KeyFactory kf = KeyFactory.getInstance(RSA);
         return kf.generatePublic(spec);
+    }
+
+    public static void saveKeyPairBytes(String pathToSave, String keyPairName) throws IOException, NoSuchAlgorithmException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
+        kpg.initialize(1024);
+        KeyPair keyPair = kpg.generateKeyPair();
+
+        // Store Public Key.
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PUBLIC)) {
+            fos.write(keyPair.getPublic().getEncoded());
+        }
+
+        // Store Private Key.
+        try (FileOutputStream fos = new FileOutputStream(pathToSave + keyPairName + "." + EXT_PRIVATE)) {
+            fos.write(keyPair.getPrivate().getEncoded());
+        }
     }
 
     static PrivateKey loadPrivateKeyFromBytes(String keyPath)

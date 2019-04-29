@@ -1,6 +1,6 @@
 package com.random;
 
-import com.random.encryption.Encryption;
+import com.random.encryption.AesEnc;
 import com.random.encryption.RsaEnc;
 
 import java.io.FileReader;
@@ -44,6 +44,10 @@ public class Main {
                 encryptFile(params);
             } else if ("-df".equals(mode)) {
                 decryptFile(params);
+            } else if ("-ep".equals(mode)) {
+                encryptFileWithPassword(params);
+            } else if ("-dp".equals(mode)) {
+                decryptFileWithPassword(params);
             }
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -86,14 +90,28 @@ public class Main {
         validateParams(args, 2);
         String pubKeyPath = args[0];
         String originalFile = args[1];
-        Encryption.encryptFileWithName(pubKeyPath, originalFile);
+        AesEnc.encryptFileWithKey(pubKeyPath, originalFile);
     }
 
     private static void decryptFile(String[] args) throws Exception {
         validateParams(args, 2);
         String privateKeyPath = args[0];
         String encryptedFile = args[1];
-        Encryption.decryptFileWithName(privateKeyPath, encryptedFile);
+        AesEnc.decryptFileWithKey(privateKeyPath, encryptedFile);
+    }
+
+    private static void encryptFileWithPassword(String[] args) throws Exception {
+        validateParams(args, 2);
+        String originalFile = args[0];
+        String password = args[1];
+        AesEnc.encryptFileWithPassword(originalFile, password);
+    }
+
+    private static void decryptFileWithPassword(String[] args) throws Exception {
+        validateParams(args, 2);
+        String encryptedFile = args[0];
+        String password = args[1];
+        AesEnc.decryptFileWithPassword(encryptedFile, password);
     }
 
     private static void validateParams(String[] args, int validParamNumber) {

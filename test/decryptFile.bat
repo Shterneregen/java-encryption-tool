@@ -1,5 +1,5 @@
 @echo off
-set key=.\key.key
-set /p file=Enter file name to decrypt: 
-java -jar coder.jar -df %key% %file%
+set KEY=.\key.key
+set /p FILE=Enter file name to decrypt: 
+java -jar coder.jar -df %KEY% %FILE%
 pause

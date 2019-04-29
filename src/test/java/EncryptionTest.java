@@ -1,4 +1,4 @@
-import com.random.encryption.Encryption;
+import com.random.encryption.AesEnc;
 import com.random.encryption.RsaEnc;
 import org.junit.Test;
 
@@ -117,7 +117,7 @@ public class EncryptionTest {
     @Test
     public void testEncryptFile() {
         try {
-            Encryption.encryptFileWithName(
+            AesEnc.encryptFileWithKey(
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.pub",
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg"
             );
@@ -129,7 +129,7 @@ public class EncryptionTest {
     @Test
     public void testDecryptFile() {
         try {
-            Encryption.decryptFileWithName(
+            AesEnc.decryptFileWithKey(
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "key.key",
                     System.getProperty("user.dir") + "\\" + "test" + "\\" + "test.jpg.enc"
             );

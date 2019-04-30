@@ -1,6 +1,7 @@
 package com.random;
 
 import com.random.encryption.AesEnc;
+import com.random.encryption.KeyLoader;
 import com.random.encryption.RsaEnc;
 
 import java.io.FileReader;
@@ -59,9 +60,9 @@ public class Main {
         String keyPairName = args.length > 0 ? args[0] : "key";
         String pathToSave = args.length > 1 ? args[1] : ".\\";
         if (base64) {
-            RsaEnc.saveKeyPairBase64(pathToSave, keyPairName);
+            KeyLoader.saveKeyPairBase64(pathToSave, keyPairName);
         } else {
-            RsaEnc.saveKeyPairBytes(pathToSave, keyPairName);
+            KeyLoader.saveKeyPairBytes(pathToSave, keyPairName);
         }
     }
 

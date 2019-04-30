@@ -26,7 +26,7 @@ public class AesEnc {
     }
 
     public static void encryptFileWithKey(String pubKeyPath, String inputFile) throws Exception {
-        PublicKey publicKey = RsaEnc.loadPublicKey(pubKeyPath);
+        PublicKey publicKey = KeyLoader.loadPublicKey(pubKeyPath);
         AesEnc.encryptFileWithKey(publicKey, inputFile);
     }
 
@@ -63,7 +63,7 @@ public class AesEnc {
     }
 
     public static void decryptFileWithKey(String privateKeyPath, String inputFile) throws Exception {
-        PrivateKey privateKey = RsaEnc.loadPrivateKey(privateKeyPath);
+        PrivateKey privateKey = KeyLoader.loadPrivateKey(privateKeyPath);
         AesEnc.decryptFileWithKey(privateKey, inputFile);
     }
 

@@ -15,7 +15,7 @@ import java.util.Base64;
 public class KeyLoader {
 
     private static final String RSA = "RSA";
-    private static final int RSA_KEYSIZE = 1024;
+    private static final int RSA_KEY_SIZE = 1024;
     private static final String EXT_PUBLIC = "pub";
     private static final String EXT_PRIVATE = "key";
 
@@ -24,7 +24,7 @@ public class KeyLoader {
 
     private static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-        kpg.initialize(RSA_KEYSIZE);
+        kpg.initialize(RSA_KEY_SIZE);
         return kpg.generateKeyPair();
     }
 

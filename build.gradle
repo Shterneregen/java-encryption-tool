@@ -4,15 +4,20 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
-}
-dependencies {
-    testCompile 'junit:junit:4.12'
+    jcenter()
 }
 
-mainClassName = 'com.random.Main'
+dependencies {
+    implementation "com.google.guava:guava:28.2-jre"
+    testImplementation "junit:junit:4.12"
+}
+
+application {
+    mainClassName = "com.random.Main"
+}
 
 jar {
+    archiveFileName = 'jet.jar'
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),

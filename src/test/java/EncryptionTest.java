@@ -7,12 +7,20 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.junit.Assert.assertEquals;
 
 public class EncryptionTest {
 
@@ -22,9 +30,7 @@ public class EncryptionTest {
     @Test
     public void testGenerate64() {
         try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-            kpg.initialize(1024);
-            KeyPair keyPair = kpg.generateKeyPair();
+            KeyPair keyPair = generateKeyPair();
 
             PrivateKey privateKey = keyPair.getPrivate();
             PublicKey publicKey = keyPair.getPublic();
@@ -44,9 +50,7 @@ public class EncryptionTest {
     @Test
     public void testEncryption() {
         try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-            kpg.initialize(1024);
-            KeyPair keyPair = kpg.generateKeyPair();
+            KeyPair keyPair = generateKeyPair();
 
             PrivateKey privateKey = keyPair.getPrivate();
             PublicKey publicKey = keyPair.getPublic();
@@ -63,11 +67,9 @@ public class EncryptionTest {
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             byte[] bts = RsaEnc.hex2Byte(encryptedStr);
             byte[] decrypted = RsaEnc.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
-//            String resStr = new String(decrypted, "UTF-8");
-//            System.out.println(resStr);
             String res = RsaEnc.removeTheTrash(new String(decrypted, StandardCharsets.UTF_8));
-            System.out.println(res);
-            assert (plaintext.equals(res));
+
+            assertEquals(plaintext, res);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
                 | BadPaddingException | IllegalBlockSizeException e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -102,13 +104,10 @@ public class EncryptionTest {
             cipher.init(Cipher.DECRYPT_MODE, privateKeyNew);
             byte[] bts = RsaEnc.hex2Byte(encryptedStr);
             byte[] decrypted = RsaEnc.blockCipher(bts, Cipher.DECRYPT_MODE, cipher);
-//            String resStr = new String(decrypted, "UTF-8");
-//            System.out.println(resStr);
+
             String res = RsaEnc.removeTheTrash(new String(decrypted, StandardCharsets.UTF_8));
 
-            assert (plaintext.equals(res));
-            System.out.println(res);
-
+            assertEquals(plaintext, res);
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
         }
@@ -136,5 +135,11 @@ public class EncryptionTest {
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+
+    private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
+        kpg.initialize(1024);
+        return kpg.generateKeyPair();
     }
 }

@@ -19,7 +19,7 @@ out/
 *.ipr
 .idea/
 
-test/keys/
+bats/keys/
 *.jar
 *.txt
 *.key

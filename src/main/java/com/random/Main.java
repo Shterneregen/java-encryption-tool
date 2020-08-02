@@ -56,7 +56,6 @@ public class Main {
     }
 
     private static void saveKeyPair(String[] args, boolean base64) throws IOException, NoSuchAlgorithmException {
-        validateParams(args, 2);
         String keyPairName = args.length > 0 ? args[0] : "key";
         String pathToSave = args.length > 1 ? args[1] : ".\\";
         if (base64) {

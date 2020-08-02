@@ -1,32 +1,39 @@
-# Encryption using RSA
+# Encryption using Java
 
 * Generate key pair: 
 ```
-java -jar coder.jar -g keypair_name
+java -jar jet.jar -g [KEYPAIR_NAME] [TARGET_FOLDER]
 ```
 
-* Encrypt string with key: 
+## Message encryption (RSA)
+* Encrypt a message with key: 
 ```
-java -jar coder.jar -e PUBLIC_KEY ORIGINAL_MSG
-java "-Dfile.encoding=UTF8" -jar coder.jar -e PUBLIC_KEY ORIGINAL_MSG
+java -jar jet.jar -e PUBLIC_KEY ORIGINAL_MSG
+java "-Dfile.encoding=UTF8" -jar jet.jar -e PUBLIC_KEY ORIGINAL_MSG
 ```
-* Decrypt string with key: 
+* Decrypt a message with key: 
 ```
-java -jar coder.jar -d PRIVATE_KEY ENCRYPTED_MSG
+java -jar jet.jar -d PRIVATE_KEY ENCRYPTED_MSG
 ```
-* Encrypt file with key: 
+
+## File encryption (AES)
+
+### File encryption with key
+* Encrypt a file with key: 
 ```
-java -jar coder.jar -ef PUBLIC_KEY ORIGINAL_FILE
+java -jar jet.jar -ef PUBLIC_KEY ORIGINAL_FILE
 ```
-* Decrypt file with key: 
+* Decrypt a file with key: 
 ```
-java -jar coder.jar -df PRIVATE_KEY ENCRYPTED_FILE
+java -jar jet.jar -df PRIVATE_KEY ENCRYPTED_FILE
 ```
-* Encrypt file with password: 
+
+### File encryption with password
+* Encrypt a file with password: 
 ```
-java -jar coder.jar -ep ORIGINAL_FILE PASSWORD
+java -jar jet.jar -ep ORIGINAL_FILE PASSWORD
 ```
-* Decrypt file with password: 
+* Decrypt a file with password: 
 ```
-java -jar coder.jar -dp ENCRYPTED_FILE PASSWORD
+java -jar jet.jar -dp ENCRYPTED_FILE PASSWORD
 ```

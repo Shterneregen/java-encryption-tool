@@ -24,3 +24,4 @@ bats/keys/
 *.txt
 *.key
 *.pub
+!gradle-wrapper.jar

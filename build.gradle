@@ -4,7 +4,7 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -20,7 +20,7 @@ jar {
     archiveFileName = 'jet.jar'
     manifest {
         attributes(
-                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Class-Path': configurations.compileClasspath.files.collect { "$it.name" }.join(' '),
                 'Main-Class': 'com.random.Main'
         )
     }
